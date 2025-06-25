@@ -131,12 +131,8 @@ export const calculateCost = (params: CostCalculationParams): CostBreakdown => {
   // Support material cost if needed
   const supportCost = hasSupport ? materialCost * 0.15 + printingCost * 0.1 : 0;
   
-  // Calculate total cost - emphasize printing time cost over material cost
-  // Material cost is now a smaller portion of total
-  const materialWeight = 0.3; // Material is 30% of cost weight
-  const printingWeight = 0.7; // Printing time is 70% of cost weight
-  
-  let totalCost = (materialCost * materialWeight) + (printingCost * printingWeight) + supportCost;
+  // Calculate total cost by adding all components directly
+  let totalCost = materialCost + printingCost + supportCost;
   
   // Apply minimum cost if needed - adjust by material category
   const minimumCost = PRINT_SETTINGS.MINIMUM_COST * TIME_MULTIPLIERS[material.category];
