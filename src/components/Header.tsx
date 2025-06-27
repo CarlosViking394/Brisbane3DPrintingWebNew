@@ -1,57 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Image from 'next/image';
 
-const Header: React.FC = () => {
+interface HeaderProps {
+  totalCost: number | null;
+  modelAvailable: boolean;
+}
+
+const Header: React.FC<HeaderProps> = ({ totalCost, modelAvailable }) => {
   // Calculate 15% smaller dimensions (original was 240x80)
   const width = Math.round(240 * 0.85); // 204
   const height = Math.round(80 * 0.85); // 68
-  
-  // State to track cost breakdown from the main component
-  const [totalCost, setTotalCost] = useState<number | null>(null);
-  const [modelAvailable, setModelAvailable] = useState<boolean>(false);
-  
-  // Effect to check for cost breakdown and model availability
-  useEffect(() => {
-    // Function to check for model and cost data
-    const checkModelAndCost = () => {
-      // Check if there's a model file uploaded
-      const modelSection = document.querySelector('#print-calculator');
-      if (!modelSection) return;
-      
-      // Look for the cost display element
-      const costElement = modelSection.querySelector('[class*="text-lg font-bold"]');
-      if (costElement && costElement.textContent) {
-        // Extract the cost value from the text (remove the $ symbol)
-        const costText = costElement.textContent.trim();
-        const costValue = parseFloat(costText.replace('$', ''));
-        
-        if (!isNaN(costValue)) {
-          setTotalCost(costValue);
-        }
-      }
-      
-      // Check if the main Print Now button is enabled (meaning a model is available)
-      const printButton = document.querySelector('#print-calculator button:not([disabled])');
-      setModelAvailable(!!printButton);
-    };
-    
-    // Initial check
-    checkModelAndCost();
-    
-    // Set up a mutation observer to detect changes in the cost display
-    const observer = new MutationObserver(checkModelAndCost);
-    
-    // Start observing the document body for changes
-    observer.observe(document.body, { 
-      childList: true, 
-      subtree: true,
-      characterData: true,
-      attributes: true 
-    });
-    
-    // Cleanup
-    return () => observer.disconnect();
-  }, []);
   
   // Function to handle payment button click
   const handlePrintNowClick = () => {

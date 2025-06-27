@@ -4,7 +4,7 @@ export const PRINT_SETTINGS = {
   DEFAULT_INFILL: 20,
   DEFAULT_LAYER_HEIGHT: 0.2,
   DEFAULT_PRINT_SPEED: 60,
-  MINIMUM_COST: 15,
+  MINIMUM_COST: 30, // Updated to $30 AUD minimum
 };
 
 // Material time multipliers - represents the relative difficulty/time needed for each category
@@ -19,6 +19,14 @@ export const BATCH_HOURLY_RATES = {
   standard: 7,      // Standard materials (PLA)
   exotic: 10,       // Exotic materials (ABS, PETG, TPU)
   reinforced: 14,   // Reinforced materials (PLA-CF, etc.)
+};
+
+// Delivery costs by location type
+export const DELIVERY_COSTS = {
+  brisbane: 10,     // Brisbane metropolitan area
+  queensland: 15,   // Regional Queensland
+  interstate: 20,   // Other Australian states
+  international: 50 // International shipping
 };
 
 interface CostCalculationParams {
@@ -131,23 +139,28 @@ export const calculateCost = (params: CostCalculationParams): CostBreakdown => {
   // Support material cost if needed
   const supportCost = hasSupport ? materialCost * 0.15 + printingCost * 0.1 : 0;
   
-  // Calculate total cost by adding all components directly
-  let totalCost = materialCost + printingCost + supportCost;
+  // Calculate base cost (excluding delivery)
+  let baseCost = materialCost + printingCost + supportCost;
   
-  // Apply minimum cost if needed - adjust by material category
-  const minimumCost = PRINT_SETTINGS.MINIMUM_COST * TIME_MULTIPLIERS[material.category];
-  const minimumApplied = totalCost < minimumCost;
+  // Apply minimum cost if needed - enforce $30 minimum for the base cost
+  const minimumCost = PRINT_SETTINGS.MINIMUM_COST;
+  const minimumApplied = baseCost < minimumCost;
   
   if (minimumApplied) {
-    totalCost = minimumCost;
+    baseCost = minimumCost;
   }
+  
+  // Total cost is the base cost (with minimum applied if needed)
+  // Delivery cost will be added separately based on location
+  const totalCost = baseCost;
   
   // Return complete breakdown
   return {
     materialCost,
     printingCost,
-    supportCost,  // Always include supportCost (will always be > 0 since hasSupport is always true now)
-    totalCost,
+    supportCost,
+    baseCost, // New field for the base cost before delivery
+    totalCost, // Total cost (currently same as baseCost, delivery will be added later)
     weightGrams,
     printTimeHours,
     breakdown: {

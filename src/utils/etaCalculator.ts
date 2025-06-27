@@ -1,4 +1,5 @@
 import { ETACalculation } from '../types';
+import { DELIVERY_COSTS } from './costCalculator';
 
 // Format delivery date as readable string
 export const formatDeliveryDate = (date: Date): string => {
@@ -40,6 +41,95 @@ export const getDeliveryUrgency = (totalDays: number): { description: string; co
   } else {
     return { description: 'Extended', color: 'text-purple-600' };
   }
+};
+
+// Interface for address data
+export interface AddressData {
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+}
+
+// Calculate delivery cost based on address data
+export const calculateDeliveryCost = (addressData: AddressData): number => {
+  if (!addressData) return DELIVERY_COSTS.interstate; // Default to interstate if no address
+  
+  // Check if the address is in Brisbane
+  const isInBrisbane = 
+    addressData.state.toLowerCase() === 'qld' && 
+    (addressData.city.toLowerCase() === 'brisbane' || 
+     /^4[0-1][0-9]{2}$/.test(addressData.postalCode)); // Brisbane postal codes typically start with 4
+  
+  if (isInBrisbane) {
+    return DELIVERY_COSTS.brisbane;
+  } else if (addressData.state.toLowerCase() === 'qld') {
+    return DELIVERY_COSTS.queensland;
+  } else if (addressData.country.toLowerCase() === 'australia') {
+    return DELIVERY_COSTS.interstate;
+  } else {
+    return DELIVERY_COSTS.international;
+  }
+};
+
+// Calculate ETA based on address data
+export const calculateETAFromAddress = (printTimeHours: number, addressData: AddressData): ETACalculation => {
+  // Convert print time to days
+  const printTimeDays = printTimeHours / 24;
+  
+  // Calculate preparation days based on print time
+  const prepDays = Math.max(0.5, printTimeDays * 0.2);
+  
+  // Calculate queue delay (longer for longer prints)
+  const queueDelayDays = Math.min(3, printTimeDays * 0.5);
+  
+  // Determine shipping days based on address
+  let shippingDays: number;
+  let locationInfo: string;
+  
+  // Check if the address is in Brisbane
+  const isInBrisbane = 
+    addressData.state.toLowerCase() === 'qld' && 
+    (addressData.city.toLowerCase() === 'brisbane' || 
+     /^4[0-1][0-9]{2}$/.test(addressData.postalCode)); // Brisbane postal codes typically start with 4
+  
+  if (isInBrisbane) {
+    // Local Brisbane delivery
+    shippingDays = 1;
+    locationInfo = 'Brisbane metropolitan area';
+  } else if (addressData.state.toLowerCase() === 'qld') {
+    // Within Queensland
+    shippingDays = 2;
+    locationInfo = 'Queensland regional';
+  } else if (addressData.country.toLowerCase() === 'australia') {
+    // Other Australian states
+    shippingDays = 3;
+    locationInfo = 'Interstate Australia';
+  } else {
+    // International
+    shippingDays = 7;
+    locationInfo = 'International';
+  }
+  
+  // Total time
+  const totalDays = printTimeDays + prepDays + queueDelayDays + shippingDays;
+  
+  // Calculate estimated date
+  const currentDate = new Date();
+  const estimatedDate = new Date(currentDate.getTime() + totalDays * 24 * 60 * 60 * 1000);
+  
+  // Return ETA calculation with address-based data
+  return {
+    estimatedDate,
+    printTimeDays,
+    prepDays,
+    queueDelayDays,
+    shippingDays,
+    totalDays,
+    isGeolocationUsed: false,
+    addressBased: true,
+    locationInfo: locationInfo
+  };
 };
 
 // Calculate ETA without using geolocation

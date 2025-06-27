@@ -234,4 +234,15 @@ export const formatModelStats = (stats: ModelStats): Record<string, string> => {
     dimensions: `${stats.dimensions.width.toFixed(1)} × ${stats.dimensions.height.toFixed(1)} × ${stats.dimensions.depth.toFixed(1)} mm`,
     surfaceArea: `${stats.surfaceArea.toFixed(1)} cm²`,
   };
-}; 
+};
+
+// Mock function to simulate sending an email
+async function sendOrderConfirmationEmail(customerInfo: any, orderDetails: any) {
+  console.log('Sending confirmation email to:', customerInfo.email);
+  console.log('Order details:', orderDetails);
+  // In a real implementation, this would use a service like SendGrid, AWS SES, etc.
+  return {
+    success: true,
+    messageId: 'mock-email-id-' + Date.now()
+  };
+} 

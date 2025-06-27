@@ -45,7 +45,8 @@ export interface CostBreakdown {
   materialCost: number;
   printingCost: number;
   supportCost?: number;
-  totalCost: number;
+  baseCost: number;  // Base cost before delivery
+  totalCost: number; // Total cost including delivery
   weightGrams: number;
   printTimeHours: number;
   breakdown: {
@@ -67,6 +68,8 @@ export interface ETACalculation {
   totalDays: number;
   isGeolocationUsed: boolean;
   locationError?: string;
+  addressBased?: boolean;
+  locationInfo?: string;
   userLocation?: {
     distance?: number;
     coordinates?: {

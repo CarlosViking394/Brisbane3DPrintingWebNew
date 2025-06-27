@@ -1,28 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { ETACalculation, CostBreakdown, MaterialType } from '../types';
+import { ETACalculation, CostBreakdown } from '../types';
 import { 
-  calculateETA, 
+  calculateETAFromAddress,
   calculateETAWithoutLocation, 
   formatDeliveryDate, 
   formatDuration,
-  getDeliveryUrgency 
+  getDeliveryUrgency,
+  AddressData
 } from '../utils/etaCalculator';
 
 interface ETACalculatorProps {
   costBreakdown?: CostBreakdown;
   materialCategory?: 'standard' | 'exotic' | 'reinforced';
   className?: string;
+  addressData?: AddressData;
 }
 
 const ETACalculator: React.FC<ETACalculatorProps> = ({
   costBreakdown,
   materialCategory = 'standard',
-  className = ''
+  className = '',
+  addressData
 }) => {
   const [etaCalculation, setEtaCalculation] = useState<ETACalculation | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
-  const [locationPermission, setLocationPermission] = useState<'granted' | 'denied' | 'prompt' | 'unknown'>('unknown');
-  const [showLocationDetails, setShowLocationDetails] = useState(false);
+  const [showAddressDetails, setShowAddressDetails] = useState(false);
 
   // Get color scheme based on material category
   const getColors = () => {
@@ -59,14 +61,14 @@ const ETACalculator: React.FC<ETACalculatorProps> = ({
 
   const colors = getColors();
 
-  // Calculate ETA when print time changes
+  // Calculate ETA when print time or address changes
   useEffect(() => {
     if (costBreakdown?.printTimeHours) {
       calculateETAEstimate();
     } else {
       setEtaCalculation(null);
     }
-  }, [costBreakdown?.printTimeHours]);
+  }, [costBreakdown?.printTimeHours, addressData]);
 
   const calculateETAEstimate = async () => {
     if (!costBreakdown?.printTimeHours) return;
@@ -74,36 +76,21 @@ const ETACalculator: React.FC<ETACalculatorProps> = ({
     setIsCalculating(true);
     
     try {
-      // Check geolocation permission status
-      if ('permissions' in navigator) {
-        const permission = await navigator.permissions.query({ name: 'geolocation' as PermissionName });
-        setLocationPermission(permission.state);
+      // If we have address data, use it for the calculation
+      if (addressData && 
+          addressData.city && 
+          addressData.state && 
+          addressData.postalCode) {
+        const eta = calculateETAFromAddress(costBreakdown.printTimeHours, addressData);
+        setEtaCalculation(eta);
+      } else {
+        // Fallback to calculation without location data
+        const eta = calculateETAWithoutLocation(costBreakdown.printTimeHours);
+        setEtaCalculation(eta);
       }
-
-      // Calculate ETA with geolocation
-      const eta = await calculateETA(costBreakdown.printTimeHours);
-      setEtaCalculation(eta);
     } catch (error) {
       console.warn('ETA calculation failed:', error);
       // Fallback to calculation without geolocation
-      const eta = calculateETAWithoutLocation(costBreakdown.printTimeHours);
-      setEtaCalculation(eta);
-    } finally {
-      setIsCalculating(false);
-    }
-  };
-
-  const handleLocationRequest = async () => {
-    if (!costBreakdown?.printTimeHours) return;
-
-    setIsCalculating(true);
-    try {
-      const eta = await calculateETA(costBreakdown.printTimeHours);
-      setEtaCalculation(eta);
-      setLocationPermission('granted');
-    } catch (error) {
-      console.warn('Location request failed:', error);
-      setLocationPermission('denied');
       const eta = calculateETAWithoutLocation(costBreakdown.printTimeHours);
       setEtaCalculation(eta);
     } finally {
@@ -158,26 +145,25 @@ const ETACalculator: React.FC<ETACalculatorProps> = ({
             </div>
           </div>
 
-          {/* Location Status */}
-          {etaCalculation.isGeolocationUsed ? (
+          {/* Address Status */}
+          {etaCalculation.addressBased ? (
             <div className="flex items-center justify-between p-4 bg-green-50 rounded-xl border border-green-200 transition-all duration-200 hover:shadow-md">
               <div className="flex items-center">
                 <div className="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-green-100 rounded-full">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                   </svg>
                 </div>
-                <span className="ml-3 font-medium text-green-800">Location-based estimate</span>
+                <span className="ml-3 font-medium text-green-800">Address-based estimate</span>
               </div>
-              {etaCalculation.userLocation && (
+              {addressData && (
                 <button
-                  onClick={() => setShowLocationDetails(!showLocationDetails)}
+                  onClick={() => setShowAddressDetails(!showAddressDetails)}
                   className="text-sm text-green-600 hover:text-green-800 hover:underline flex items-center font-medium"
-                  aria-expanded={showLocationDetails}
-                  aria-label="Toggle location details"
+                  aria-expanded={showAddressDetails}
+                  aria-label="Toggle address details"
                 >
-                  {showLocationDetails ? 
+                  {showAddressDetails ? 
                     <span className="flex items-center">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -203,42 +189,33 @@ const ETACalculator: React.FC<ETACalculatorProps> = ({
                   </svg>
                 </div>
                 <span className="ml-3 font-medium text-yellow-800">
-                  {etaCalculation.locationError || 'Using standard delivery estimate'}
+                  Using standard delivery estimate
                 </span>
               </div>
-              {locationPermission !== 'denied' && (
-                <button
-                  onClick={handleLocationRequest}
-                  className="px-3 py-1.5 text-sm bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors flex items-center font-medium"
-                  aria-label="Enable location for accurate estimate"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  Enable Location
-                </button>
-              )}
+              <div className="text-sm text-yellow-600">
+                Please enter your address for a more accurate estimate
+              </div>
             </div>
           )}
 
-          {/* Location Details */}
-          {showLocationDetails && etaCalculation.userLocation && (
+          {/* Address Details */}
+          {showAddressDetails && etaCalculation.addressBased && addressData && (
             <div className="p-4 bg-white rounded-xl border border-gray-200 shadow-sm transition-all duration-200">
               <h4 className="font-medium text-gray-800 mb-3 flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
-                Location Details
+                Delivery Address
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div className="bg-gray-50 p-3 rounded-lg flex justify-between">
-                  <span className="text-sm text-gray-600">Distance to Brisbane:</span>
-                  <span className="text-sm font-medium text-gray-800">{etaCalculation.userLocation.distance?.toFixed(1)} km</span>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <span className="text-sm text-gray-600">Location type:</span>
+                  <span className="block font-medium text-gray-800">{etaCalculation.locationInfo}</span>
                 </div>
-                <div className="bg-gray-50 p-3 rounded-lg flex justify-between">
+                <div className="bg-gray-50 p-3 rounded-lg">
                   <span className="text-sm text-gray-600">Shipping time:</span>
-                  <span className="text-sm font-medium text-gray-800">{formatDuration(etaCalculation.shippingDays)}</span>
+                  <span className="block font-medium text-gray-800">{formatDuration(etaCalculation.shippingDays)}</span>
                 </div>
               </div>
             </div>
@@ -317,7 +294,7 @@ const ETACalculator: React.FC<ETACalculatorProps> = ({
                 <div className="ml-4 flex-1">
                   <div className="flex justify-between items-center">
                     <span className="font-medium text-gray-800">
-                      Shipping {etaCalculation.isGeolocationUsed ? '(to your location)' : '(standard)'}
+                      Shipping {etaCalculation.addressBased ? `(${etaCalculation.locationInfo})` : '(standard)'}
                     </span>
                     <span className={`text-sm ${colors.highlight} px-3 py-1 rounded-full`}>
                       {formatDuration(etaCalculation.shippingDays)}
@@ -353,7 +330,7 @@ const ETACalculator: React.FC<ETACalculatorProps> = ({
                     <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 mr-2 ${colors.primary}`} viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
-                    {etaCalculation.isGeolocationUsed ? 'Location-based' : 'Standard'} shipping estimate
+                    {etaCalculation.addressBased ? 'Address-based' : 'Standard'} shipping estimate
                   </li>
                   <li className="flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 mr-2 ${colors.primary}`} viewBox="0 0 20 20" fill="currentColor">
@@ -375,7 +352,7 @@ const ETACalculator: React.FC<ETACalculatorProps> = ({
           </div>
           <div>
             <h4 className="text-xl font-bold text-gray-700 mb-2">Upload a Model</h4>
-            <p className="text-gray-600 max-w-md mx-auto">Get delivery estimates based on your location and print time</p>
+            <p className="text-gray-600 max-w-md mx-auto">Get delivery estimates based on your address and print time</p>
           </div>
         </div>
       )}

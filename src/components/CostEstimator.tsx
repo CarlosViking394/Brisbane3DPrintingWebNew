@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { CostBreakdown, MaterialType, ModelFile } from '../types';
-import { calculateCost, formatCost, formatPrintTime, PRINT_SETTINGS } from '../utils/costCalculator';
+import { calculateCost, formatCost, formatPrintTime, PRINT_SETTINGS, DELIVERY_COSTS } from '../utils/costCalculator';
+import { AddressData, calculateDeliveryCost } from '../utils/etaCalculator';
 
 interface CostEstimatorProps {
   selectedMaterial: MaterialType;
@@ -10,6 +11,9 @@ interface CostEstimatorProps {
   modelFile?: ModelFile;
   onCostBreakdownChange: (breakdown: CostBreakdown | null) => void;
   className?: string;
+  addressData?: AddressData;
+  deliveryCost?: number;
+  totalCost?: number;
 }
 
 const CostEstimator: React.FC<CostEstimatorProps> = ({
@@ -19,7 +23,10 @@ const CostEstimator: React.FC<CostEstimatorProps> = ({
   onBatchToggle,
   modelFile,
   onCostBreakdownChange,
-  className = ''
+  className = '',
+  addressData,
+  deliveryCost = 0,
+  totalCost = 0
 }) => {
   // Form state
   const [infillPercentage, setInfillPercentage] = useState<number>(PRINT_SETTINGS.DEFAULT_INFILL);
@@ -30,6 +37,7 @@ const CostEstimator: React.FC<CostEstimatorProps> = ({
   
   // Calculated cost breakdown
   const [costBreakdown, setCostBreakdown] = useState<CostBreakdown | null>(null);
+  const [calculatedDeliveryCost, setCalculatedDeliveryCost] = useState<number>(0);
 
   // Calculate cost when parameters change
   useEffect(() => {
@@ -50,6 +58,13 @@ const CostEstimator: React.FC<CostEstimatorProps> = ({
       printSpeed
     });
 
+    // Calculate delivery cost if address data is available
+    let delivery = deliveryCost;
+    if (addressData) {
+      delivery = calculateDeliveryCost(addressData);
+      setCalculatedDeliveryCost(delivery);
+    }
+
     setCostBreakdown(breakdown);
     onCostBreakdownChange(breakdown);
   }, [
@@ -58,7 +73,8 @@ const CostEstimator: React.FC<CostEstimatorProps> = ({
     isBatch, 
     infillPercentage, 
     layerHeight, 
-    printSpeed
+    printSpeed,
+    addressData
   ]);
 
   // Handle slider changes
@@ -128,6 +144,26 @@ const CostEstimator: React.FC<CostEstimatorProps> = ({
   };
   
   const colors = getMaterialColors();
+
+  // Get location type based on address data
+  const getLocationInfo = (): string => {
+    if (!addressData) return 'Standard shipping';
+    
+    const isInBrisbane = 
+      addressData.state.toLowerCase() === 'qld' && 
+      (addressData.city.toLowerCase() === 'brisbane' || 
+      /^4[0-1][0-9]{2}$/.test(addressData.postalCode));
+    
+    if (isInBrisbane) {
+      return 'Brisbane metropolitan area';
+    } else if (addressData.state.toLowerCase() === 'qld') {
+      return 'Queensland regional';
+    } else if (addressData.country.toLowerCase() === 'australia') {
+      return 'Interstate Australia';
+    } else {
+      return 'International';
+    }
+  };
 
   return (
     <div className={`space-y-6 ${className}`}>
@@ -200,40 +236,113 @@ const CostEstimator: React.FC<CostEstimatorProps> = ({
               <span className="text-gray-900 font-medium">{formatCost(costBreakdown.supportCost || 0)}</span>
             </div>
             
-            {/* Print Quality Information */}
-            <div className={`${colors.bg} rounded-md p-3 text-sm ${colors.text} flex items-start`}>
-              <svg className="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <div>
-                <span className="font-medium">Print Quality:</span> {getPrintQuality()} ({formatLayerHeight(layerHeight)})
-                • <span className="font-medium">Infill:</span> {infillPercentage}%
-                • <span className="font-medium">Speed:</span> {getPrintSpeedDescription()}
+            {/* Subtotal (Base Cost) */}
+            <div className="pt-2 border-t border-gray-200">
+              <div className="flex justify-between items-center py-2">
+                <span className="text-sm font-medium text-gray-700">Subtotal</span>
+                <span className="font-medium text-gray-900">{formatCost(costBreakdown.baseCost)}</span>
               </div>
             </div>
             
-            {/* Minimum Cost Notice (if applied) */}
-            {costBreakdown.breakdown.minimumApplied && (
-              <div className={`flex justify-between items-center py-2 ${colors.text} ${colors.bg} px-3 rounded-md`}>
-                <div className="flex items-center">
-                  <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
-                  <div className="text-sm font-medium">Minimum order cost applied</div>
+            {/* Delivery Cost */}
+            <div className="flex justify-between items-center py-2">
+              <div className="flex items-center">
+                <svg className={`w-5 h-5 ${colors.highlight} mr-2`} fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
+                  <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1v-5h2.05a2.5 2.5 0 014.9 0H19a1 1 0 001-1v-4a1 1 0 00-.293-.707l-2-2A1 1 0 0017 2h-3a1 1 0 00-1 1v1H6a1 1 0 00-1 1v1H3a1 1 0 00-1 1zm17 8h-1.05a2.5 2.5 0 00-4.9 0H10V5h6v2h4v5zM3 8h4v8H3V8z" />
+                </svg>
+                <div>
+                  <div className="text-sm font-medium text-gray-700">Delivery</div>
+                  <div className="text-xs text-gray-500">{getLocationInfo()}</div>
                 </div>
-                <span className="font-medium">${PRINT_SETTINGS.MINIMUM_COST.toFixed(2)}</span>
               </div>
-            )}
+              <span className="text-gray-900 font-medium">{formatCost(deliveryCost)}</span>
+            </div>
             
-            {/* Total */}
-            <div className="border-t border-gray-200 pt-4 mt-4">
-              <div className="flex justify-between items-center">
-                <span className="text-lg font-bold text-gray-900">Total Cost</span>
-                <span className={`text-xl font-bold ${colors.total}`}>{formatCost(costBreakdown.totalCost)}</span>
+            {/* Total Cost */}
+            <div className="pt-2 mt-2 border-t border-gray-200">
+              <div className="flex justify-between items-center py-2">
+                <span className="text-base font-bold text-gray-800">Total</span>
+                <span className={`text-lg font-bold ${colors.total}`}>{formatCost(totalCost)}</span>
               </div>
-              <div className="text-xs text-gray-500 mt-1 text-right">
-                Estimated weight: {costBreakdown.weightGrams.toFixed(1)}g • Print time: {formatPrintTime(costBreakdown.printTimeHours)}
+              <div className="text-xs text-gray-500 text-right">
+                {costBreakdown.breakdown.minimumApplied && (
+                  <span>Minimum order value of ${PRINT_SETTINGS.MINIMUM_COST} applied</span>
+                )}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Print Settings */}
+      {modelFile && (
+        <div className="space-y-6">
+          <h3 className="text-lg font-medium text-gray-800">Print Settings</h3>
+          
+          {/* Infill Percentage */}
+          <div>
+            <div className="flex justify-between mb-1">
+              <label htmlFor="infill" className="text-sm font-medium text-gray-700">Infill Percentage</label>
+              <span className="text-sm text-gray-500">{infillPercentage}%</span>
+            </div>
+            <input
+              type="range"
+              id="infill"
+              min="10"
+              max="100"
+              step="5"
+              value={infillPercentage}
+              onChange={handleInfillChange}
+              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+            />
+            <div className="flex justify-between mt-1 text-xs text-gray-500">
+              <span>Hollow (10%)</span>
+              <span>Solid (100%)</span>
+            </div>
+          </div>
+          
+          {/* Layer Height */}
+          <div>
+            <div className="flex justify-between mb-1">
+              <label htmlFor="layerHeight" className="text-sm font-medium text-gray-700">Layer Height</label>
+              <span className="text-sm text-gray-500">{formatLayerHeight(layerHeight)} - {getPrintQuality()}</span>
+            </div>
+            <input
+              type="range"
+              id="layerHeight"
+              min="0.1"
+              max="0.4"
+              step="0.05"
+              value={layerHeight}
+              onChange={handleLayerHeightChange}
+              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+            />
+            <div className="flex justify-between mt-1 text-xs text-gray-500">
+              <span>Fine (0.10mm)</span>
+              <span>Draft (0.40mm)</span>
+            </div>
+          </div>
+          
+          {/* Print Speed */}
+          <div>
+            <div className="flex justify-between mb-1">
+              <label htmlFor="printSpeed" className="text-sm font-medium text-gray-700">Print Speed</label>
+              <span className="text-sm text-gray-500">{printSpeed} mm/s - {getPrintSpeedDescription()}</span>
+            </div>
+            <input
+              type="range"
+              id="printSpeed"
+              min="20"
+              max="100"
+              step="10"
+              value={printSpeed}
+              onChange={handlePrintSpeedChange}
+              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+            />
+            <div className="flex justify-between mt-1 text-xs text-gray-500">
+              <span>Slow (20mm/s)</span>
+              <span>Fast (100mm/s)</span>
             </div>
           </div>
         </div>
