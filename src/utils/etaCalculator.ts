@@ -45,6 +45,7 @@ export const getDeliveryUrgency = (totalDays: number): { description: string; co
 
 // Interface for address data
 export interface AddressData {
+  street?: string;
   city: string;
   state: string;
   postalCode: string;

@@ -57,7 +57,8 @@ const CostEstimator: React.FC<CostEstimatorProps> = ({
     infillPercentage, 
     layerHeight, 
     printSpeed,
-    onCostBreakdownChange
+    onCostBreakdownChange,
+    hasSupport
   ]);
 
   // Format layer height for display

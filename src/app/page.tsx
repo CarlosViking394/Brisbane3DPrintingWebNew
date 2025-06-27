@@ -7,7 +7,9 @@ import MaterialSelector from '../components/MaterialSelector';
 import CostEstimator from '../components/CostEstimator';
 import ETACalculator from '../components/ETACalculator';
 import Header from '../components/Header';
+import UserInformation from '../components/UserInformation';
 import { CostBreakdown, ModelFile, MaterialType } from '../types';
+import { AddressData } from '../utils/etaCalculator';
 
 // Default material
 const DEFAULT_MATERIAL: MaterialType = {
@@ -22,6 +24,7 @@ export default function Home() {
   const [selectedMaterial, setSelectedMaterial] = useState<MaterialType>(DEFAULT_MATERIAL);
   const [isBatch, setIsBatch] = useState<boolean>(false);
   const [costBreakdown, setCostBreakdown] = useState<CostBreakdown | null>(null);
+  const [addressData, setAddressData] = useState<AddressData | undefined>(undefined);
 
   // Handle file upload
   const handleFileUpload = (file: ModelFile) => {
@@ -43,6 +46,11 @@ export default function Home() {
   // Handle cost breakdown change
   const handleCostBreakdownChange = (breakdown: CostBreakdown | null) => {
     setCostBreakdown(breakdown);
+  };
+  
+  // Handle address change
+  const handleAddressChange = (address: AddressData) => {
+    setAddressData(address);
   };
 
   return (
@@ -80,6 +88,14 @@ export default function Home() {
           
           {/* Right Column - Options and Calculations */}
           <div className="lg:col-span-7 space-y-8">
+            {/* User Information for delivery */}
+            <section className="bg-white rounded-xl shadow-sm p-6 space-y-4">
+              <h2 className="text-xl font-bold text-gray-900">Your Information</h2>
+              <UserInformation 
+                onAddressChange={handleAddressChange} 
+              />
+            </section>
+
             {/* Cost Estimator */}
             <section className="bg-white rounded-xl shadow-sm p-6 space-y-4">
               <h2 className="text-xl font-bold text-gray-900">Cost Calculator</h2>
@@ -96,7 +112,10 @@ export default function Home() {
             {/* ETA Calculator */}
             <section className="bg-white rounded-xl shadow-sm p-6 space-y-4">
               <h2 className="text-xl font-bold text-gray-900">Delivery Time</h2>
-              <ETACalculator costBreakdown={costBreakdown || undefined} />
+              <ETACalculator 
+                costBreakdown={costBreakdown || undefined}
+                addressData={addressData}
+              />
             </section>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ETACalculation, CostBreakdown } from '../types';
 import { 
   calculateETAFromAddress,
@@ -61,16 +61,8 @@ const ETACalculator: React.FC<ETACalculatorProps> = ({
 
   const colors = getColors();
 
-  // Calculate ETA when print time or address changes
-  useEffect(() => {
-    if (costBreakdown?.printTimeHours) {
-      calculateETAEstimate();
-    } else {
-      setEtaCalculation(null);
-    }
-  }, [costBreakdown?.printTimeHours, addressData]);
-
-  const calculateETAEstimate = async () => {
+  // Memoize the calculation function to avoid infinite loops
+  const calculateETAEstimate = useCallback(async () => {
     if (!costBreakdown?.printTimeHours) return;
 
     setIsCalculating(true);
@@ -96,7 +88,16 @@ const ETACalculator: React.FC<ETACalculatorProps> = ({
     } finally {
       setIsCalculating(false);
     }
-  };
+  }, [costBreakdown?.printTimeHours, addressData]);
+
+  // Calculate ETA when print time or address changes
+  useEffect(() => {
+    if (costBreakdown?.printTimeHours) {
+      calculateETAEstimate();
+    } else {
+      setEtaCalculation(null);
+    }
+  }, [costBreakdown?.printTimeHours, addressData, calculateETAEstimate]);
 
   const urgency = etaCalculation ? getDeliveryUrgency(etaCalculation.totalDays) : null;
 
@@ -247,112 +248,7 @@ const ETACalculator: React.FC<ETACalculatorProps> = ({
                   </div>
                 </div>
               </div>
-
-              {/* Prep Time */}
-              <div className="flex items-center p-4 bg-gray-50 rounded-xl border border-gray-200 transition-all duration-200 hover:shadow-md">
-                <div className={`h-10 w-10 rounded-full ${colors.bg} flex items-center justify-center flex-shrink-0`}>
-                  <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${colors.primary}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </div>
-                <div className="ml-4 flex-1">
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium text-gray-800">Preparation & Quality Control</span>
-                    <span className={`text-sm ${colors.highlight} px-3 py-1 rounded-full`}>
-                      {formatDuration(etaCalculation.prepDays)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Queue Delay */}
-              <div className="flex items-center p-4 bg-gray-50 rounded-xl border border-gray-200 transition-all duration-200 hover:shadow-md">
-                <div className={`h-10 w-10 rounded-full ${colors.bg} flex items-center justify-center flex-shrink-0`}>
-                  <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${colors.primary}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                  </svg>
-                </div>
-                <div className="ml-4 flex-1">
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium text-gray-800">Production Queue</span>
-                    <span className={`text-sm ${colors.highlight} px-3 py-1 rounded-full`}>
-                      {formatDuration(etaCalculation.queueDelayDays)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Shipping */}
-              <div className="flex items-center p-4 bg-gray-50 rounded-xl border border-gray-200 transition-all duration-200 hover:shadow-md">
-                <div className={`h-10 w-10 rounded-full ${colors.bg} flex items-center justify-center flex-shrink-0`}>
-                  <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${colors.primary}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
-                  </svg>
-                </div>
-                <div className="ml-4 flex-1">
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium text-gray-800">
-                      Shipping {etaCalculation.addressBased ? `(${etaCalculation.locationInfo})` : '(standard)'}
-                    </span>
-                    <span className={`text-sm ${colors.highlight} px-3 py-1 rounded-full`}>
-                      {formatDuration(etaCalculation.shippingDays)}
-                    </span>
-                  </div>
-                </div>
-              </div>
             </div>
-          </div>
-
-          {/* Delivery Information */}
-          <div className={`p-4 ${colors.bg} rounded-xl border ${colors.border} transition-all duration-200 hover:shadow-md`}>
-            <div className="flex items-start">
-              <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-2 ${colors.primary} flex-shrink-0`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <div className="flex-1">
-                <div className={`font-bold ${colors.text} mb-2`}>Delivery Information:</div>
-                <ul className={`space-y-2 text-sm ${colors.text}`}>
-                  <li className="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 mr-2 ${colors.primary}`} viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    All items are shipped from Brisbane, Australia
-                  </li>
-                  <li className="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 mr-2 ${colors.primary}`} viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    Delivery times include production and shipping
-                  </li>
-                  <li className="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 mr-2 ${colors.primary}`} viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    {etaCalculation.addressBased ? 'Address-based' : 'Standard'} shipping estimate
-                  </li>
-                  <li className="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 mr-2 ${colors.primary}`} viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    Actual delivery may vary based on current workload
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="text-center text-gray-500 py-10">
-          <div className="bg-gray-50 p-8 rounded-xl border border-gray-200 inline-block mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-gray-400 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-          </div>
-          <div>
-            <h4 className="text-xl font-bold text-gray-700 mb-2">Upload a Model</h4>
-            <p className="text-gray-600 max-w-md mx-auto">Get delivery estimates based on your address and print time</p>
           </div>
         </div>
       )}
@@ -360,4 +256,4 @@ const ETACalculator: React.FC<ETACalculatorProps> = ({
   );
 };
 
-export default ETACalculator; 
+export default ETACalculator;
