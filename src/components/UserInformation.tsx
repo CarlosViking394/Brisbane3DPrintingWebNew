@@ -1,5 +1,13 @@
 import React, { useState } from 'react';
-import { AddressData } from '../utils/etaCalculator';
+
+// Define interface locally instead of importing from etaCalculator
+interface AddressData {
+  street?: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+}
 
 interface UserInformationProps {
   onAddressChange: (address: AddressData) => void;
