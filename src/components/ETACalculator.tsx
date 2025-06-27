@@ -87,7 +87,7 @@ const ETACalculator: React.FC<ETACalculatorProps> = ({
     } else {
       setEtaCalculation(null);
     }
-  }, [costBreakdown?.printTimeHours, calculateETAEstimate]);
+  }, [costBreakdown?.printTimeHours, addressData, calculateETAEstimate]);
 
   if (isCalculating) {
     return (

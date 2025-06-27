@@ -65,7 +65,7 @@ const Model3D: React.FC<{ geometry: THREE.BufferGeometry }> = ({ geometry }) => 
         setProcessedGeometry(boxGeometry);
       }
     }
-  }, [geometry]);
+  }, [geometry]); // Only depend on the input geometry prop, not processedGeometry
   
   // Simple hover effect
   useFrame(() => {

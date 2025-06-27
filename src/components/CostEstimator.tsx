@@ -33,7 +33,6 @@ const CostEstimator: React.FC<CostEstimatorProps> = ({
   useEffect(() => {
     if (!modelFile || !modelFile.parsedModel?.stats?.volume) {
       setCostBreakdown(null);
-      onCostBreakdownChange(null);
       return;
     }
 
@@ -49,7 +48,6 @@ const CostEstimator: React.FC<CostEstimatorProps> = ({
     });
 
     setCostBreakdown(breakdown);
-    onCostBreakdownChange(breakdown);
   }, [
     modelFile, 
     selectedMaterial, 
@@ -57,9 +55,13 @@ const CostEstimator: React.FC<CostEstimatorProps> = ({
     infillPercentage, 
     layerHeight, 
     printSpeed,
-    onCostBreakdownChange,
     hasSupport
   ]);
+  
+  // Separate effect to call onCostBreakdownChange when costBreakdown changes
+  useEffect(() => {
+    onCostBreakdownChange(costBreakdown);
+  }, [costBreakdown, onCostBreakdownChange]);
 
   // Format layer height for display
   const formatLayerHeight = (value: number): string => {
@@ -83,10 +85,6 @@ const CostEstimator: React.FC<CostEstimatorProps> = ({
     if (printSpeed <= 90) return 'Fast';
     return 'Ultra Fast';
   };
-
-
-
-  
 
   return (
     <div className={`space-y-6 ${className}`}>
@@ -197,8 +195,6 @@ const CostEstimator: React.FC<CostEstimatorProps> = ({
           </div>
         </div>
       )}
-
-
     </div>
   );
 };

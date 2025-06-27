@@ -5,11 +5,9 @@ import FileUploader from '../components/FileUploader';
 import ModelViewer from '../components/ModelViewer';
 import MaterialSelector from '../components/MaterialSelector';
 import CostEstimator from '../components/CostEstimator';
-import ETACalculator from '../components/ETACalculator';
 import Header from '../components/Header';
 import UserInformation from '../components/UserInformation';
 import { CostBreakdown, ModelFile, MaterialType } from '../types';
-import { AddressData } from '../utils/etaCalculator';
 
 // Default material
 const DEFAULT_MATERIAL: MaterialType = {
@@ -24,7 +22,7 @@ export default function Home() {
   const [selectedMaterial, setSelectedMaterial] = useState<MaterialType>(DEFAULT_MATERIAL);
   const [isBatch, setIsBatch] = useState<boolean>(false);
   const [costBreakdown, setCostBreakdown] = useState<CostBreakdown | null>(null);
-  const [addressData, setAddressData] = useState<AddressData | undefined>(undefined);
+  const [addressData, setAddressData] = useState<any | undefined>(undefined);
 
   // Handle file upload
   const handleFileUpload = (file: ModelFile) => {
@@ -49,7 +47,7 @@ export default function Home() {
   };
   
   // Handle address change
-  const handleAddressChange = (address: AddressData) => {
+  const handleAddressChange = (address: any) => {
     setAddressData(address);
   };
 
@@ -106,15 +104,6 @@ export default function Home() {
                 onBatchToggle={handleBatchToggle} 
                 modelFile={modelFile} 
                 onCostBreakdownChange={handleCostBreakdownChange} 
-              />
-            </section>
-            
-            {/* ETA Calculator */}
-            <section className="bg-white rounded-xl shadow-sm p-6 space-y-4">
-              <h2 className="text-xl font-bold text-gray-900">Delivery Time</h2>
-              <ETACalculator 
-                costBreakdown={costBreakdown || undefined}
-                addressData={addressData}
               />
             </section>
           </div>
