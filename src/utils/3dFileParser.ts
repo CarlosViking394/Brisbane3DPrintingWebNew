@@ -1,6 +1,7 @@
 import { ModelStats, ParsedModel } from "../types";
 import * as THREE from 'three';
-import { STLLoader } from 'three/examples/jsm/loaders/STLLoader';
+// Import STLLoader from three-stdlib which is more compatible
+import { STLLoader } from 'three-stdlib';
 
 // Utility function to estimate material weight based on volume and material type
 export const getWeightForMaterial = (volumeInCm3: number, materialType: string): number => {

@@ -19,10 +19,10 @@ const CostEstimator: React.FC<CostEstimatorProps> = ({
   onCostBreakdownChange,
   className = ''
 }) => {
-  // Form state
-  const [infillPercentage, setInfillPercentage] = useState<number>(PRINT_SETTINGS.DEFAULT_INFILL);
-  const [layerHeight, setLayerHeight] = useState<number>(PRINT_SETTINGS.DEFAULT_LAYER_HEIGHT);
-  const [printSpeed, setPrintSpeed] = useState<number>(PRINT_SETTINGS.DEFAULT_PRINT_SPEED);
+  // Form state - using default values internally
+  const infillPercentage = PRINT_SETTINGS.DEFAULT_INFILL;
+  const layerHeight = PRINT_SETTINGS.DEFAULT_LAYER_HEIGHT;
+  const printSpeed = PRINT_SETTINGS.DEFAULT_PRINT_SPEED;
   // Support material is always included
   const hasSupport = true;
   
@@ -83,18 +83,7 @@ const CostEstimator: React.FC<CostEstimatorProps> = ({
     return 'Ultra Fast';
   };
 
-  // Handle slider changes
-  const handleInfillChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInfillPercentage(parseInt(e.target.value, 10));
-  };
 
-  const handleLayerHeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setLayerHeight(parseFloat(e.target.value));
-  };
-
-  const handlePrintSpeedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPrintSpeed(parseInt(e.target.value, 10));
-  };
 
   
 
@@ -138,7 +127,7 @@ const CostEstimator: React.FC<CostEstimatorProps> = ({
             {/* Printing Cost */}
             <div className="flex justify-between items-center py-2">
               <div className="flex items-center">
-                <svg className={`w-5 h-5 ${colors.highlight} mr-2`} fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-5 h-5 text-gray-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0v3H7V4h6zm-5 7a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
                 </svg>
                 <div>
@@ -158,7 +147,7 @@ const CostEstimator: React.FC<CostEstimatorProps> = ({
             {/* Support Material Cost */}
             <div className="flex justify-between items-center py-2">
               <div className="flex items-center">
-                <svg className={`w-5 h-5 ${colors.highlight} mr-2`} fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-5 h-5 text-gray-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M11 17a1 1 0 001.447.894l4-2A1 1 0 0017 15V9.236a1 1 0 00-1.447-.894l-4 2a1 1 0 00-.553.894V17zM15.211 6.276a1 1 0 000-1.788l-4.764-2.382a1 1 0 00-.894 0L4.789 4.488a1 1 0 000 1.788l4.764 2.382a1 1 0 00.894 0l4.764-2.382zM4.447 8.342A1 1 0 003 9.236V15a1 1 0 00.553.894l4 2A1 1 0 009 17v-5.764a1 1 0 00-.553-.894l-4-2z" />
                 </svg>
                 <div>
@@ -198,7 +187,7 @@ const CostEstimator: React.FC<CostEstimatorProps> = ({
             <div className="border-t border-gray-200 pt-4 mt-4">
               <div className="flex justify-between items-center">
                 <span className="text-lg font-bold text-gray-900">Total Cost</span>
-                <span className={`text-xl font-bold ${colors.total}`}>{formatCost(costBreakdown.totalCost)}</span>
+                <span className="text-xl font-bold text-blue-600">{formatCost(costBreakdown.totalCost)}</span>
               </div>
               <div className="text-xs text-gray-500 mt-1 text-right">
                 Estimated weight: {costBreakdown.weightGrams.toFixed(1)}g • Print time: {formatPrintTime(costBreakdown.printTimeHours)}
@@ -208,78 +197,7 @@ const CostEstimator: React.FC<CostEstimatorProps> = ({
         </div>
       )}
 
-      {/* Print Settings */}
-      {modelFile && (
-        <div className="space-y-6">
-          <h3 className="text-lg font-medium text-gray-800">Print Settings</h3>
-          
-          {/* Infill Percentage */}
-          <div>
-            <div className="flex justify-between mb-1">
-              <label htmlFor="infill" className="text-sm font-medium text-gray-700">Infill Percentage</label>
-              <span className="text-sm text-gray-500">{infillPercentage}%</span>
-            </div>
-            <input
-              type="range"
-              id="infill"
-              min="10"
-              max="100"
-              step="5"
-              value={infillPercentage}
-              onChange={handleInfillChange}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-            />
-            <div className="flex justify-between mt-1 text-xs text-gray-500">
-              <span>Hollow (10%)</span>
-              <span>Solid (100%)</span>
-            </div>
-          </div>
-          
-          {/* Layer Height */}
-          <div>
-            <div className="flex justify-between mb-1">
-              <label htmlFor="layerHeight" className="text-sm font-medium text-gray-700">Layer Height</label>
-              <span className="text-sm text-gray-500">{formatLayerHeight(layerHeight)} - {getPrintQuality()}</span>
-            </div>
-            <input
-              type="range"
-              id="layerHeight"
-              min="0.1"
-              max="0.4"
-              step="0.05"
-              value={layerHeight}
-              onChange={handleLayerHeightChange}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-            />
-            <div className="flex justify-between mt-1 text-xs text-gray-500">
-              <span>Fine (0.10mm)</span>
-              <span>Draft (0.40mm)</span>
-            </div>
-          </div>
-          
-          {/* Print Speed */}
-          <div>
-            <div className="flex justify-between mb-1">
-              <label htmlFor="printSpeed" className="text-sm font-medium text-gray-700">Print Speed</label>
-              <span className="text-sm text-gray-500">{printSpeed} mm/s - {getPrintSpeedDescription()}</span>
-            </div>
-            <input
-              type="range"
-              id="printSpeed"
-              min="20"
-              max="100"
-              step="10"
-              value={printSpeed}
-              onChange={handlePrintSpeedChange}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-            />
-            <div className="flex justify-between mt-1 text-xs text-gray-500">
-              <span>Slow (20mm/s)</span>
-              <span>Fast (100mm/s)</span>
-            </div>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 };
