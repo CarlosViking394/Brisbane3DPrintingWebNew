@@ -13,7 +13,7 @@ export interface ModelFile {
 }
 
 export interface ParsedModel {
-  geometry: any; // THREE.BufferGeometry
+  geometry: unknown; // Three.js BufferGeometry object
   stats: ModelStats;
   metadata: {
     format: string;

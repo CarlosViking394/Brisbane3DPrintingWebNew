@@ -2,11 +2,11 @@ import React from 'react';
 import Image from 'next/image';
 
 interface HeaderProps {
-  totalCost: number | null;
-  modelAvailable: boolean;
+  totalCost?: number | null;
+  modelAvailable?: boolean;
 }
 
-const Header: React.FC<HeaderProps> = ({ totalCost, modelAvailable }) => {
+const Header: React.FC<HeaderProps> = ({ totalCost, modelAvailable = false }) => {
   // Calculate 15% smaller dimensions (original was 240x80)
   const width = Math.round(240 * 0.85); // 204
   const height = Math.round(80 * 0.85); // 68

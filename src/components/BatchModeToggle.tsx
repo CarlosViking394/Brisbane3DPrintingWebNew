@@ -1,6 +1,19 @@
 import React from 'react';
 import { MaterialType } from '../types';
-import { formatCost } from '../utils/costCalculator';
+
+const TIERED_PRICING_STRUCTURE = {
+  tier1: { range: "< 1 hour", basePrice: 10, rate: 5 },
+  tier2: { range: "1-3 hours", basePrice: 30, rate: 7.5 },
+  tier3: { range: "3-6 hours", basePrice: 60, rate: 10 },
+  tier4: { range: "6+ hours", basePrice: 100, rate: 8.33, cap: 150 }
+} as const;
+
+type TierStructure = {
+  range: string;
+  basePrice: number;
+  rate: number;
+  cap?: number;
+};
 
 interface BatchModeToggleProps {
   isBatch: boolean;
@@ -9,134 +22,97 @@ interface BatchModeToggleProps {
   className?: string;
 }
 
-const TIERED_PRICING_STRUCTURE = [
-  { timeRange: 'Less than 1 hour', minPrice: 10, maxPrice: 15, description: 'Quick prints and prototypes' },
-  { timeRange: '1-3 hours', minPrice: 30, maxPrice: 45, description: 'Standard complexity models' },
-  { timeRange: '3-6 hours', minPrice: 60, maxPrice: 90, description: 'Detailed and complex prints' },
-  { timeRange: '6+ hours', minPrice: 100, maxPrice: 150, description: 'Large and intricate projects' },
-];
-
 const BatchModeToggle: React.FC<BatchModeToggleProps> = ({
   isBatch,
   onToggle,
   selectedMaterial,
   className = ''
 }) => {
-  const batchHourlyRate = selectedMaterial?.isExotic ? 10 : 7;
+  // Get hourly rate based on material category
+  const getBatchHourlyRate = (category: string): number => {
+    switch (category) {
+      case 'exotic':
+        return 10;
+      case 'reinforced':
+        return 14;
+      default: // standard
+        return 7;
+    }
+  };
+
+  const batchHourlyRate = getBatchHourlyRate(selectedMaterial.category);
 
   return (
     <div className={`space-y-4 ${className}`}>
       <div className="flex items-center justify-between">
-        <h3 className="text-base font-semibold text-gray-800">Batch Mode</h3>
-        <div className="relative inline-block w-12 align-middle select-none">
-          <input
-            type="checkbox"
-            name="batchMode"
-            id="batchMode"
-            checked={isBatch}
-            onChange={() => onToggle(!isBatch)}
-            className="sr-only"
-          />
-          <label
-            htmlFor="batchMode"
-            className={`block overflow-hidden h-6 rounded-full cursor-pointer transition-colors duration-200 ease-in-out ${
-              isBatch ? 'bg-blue-600' : 'bg-gray-300'
-            }`}
-          >
-            <span
-              className={`block h-6 w-6 rounded-full bg-white shadow transform transition-transform duration-200 ease-in-out ${
-                isBatch ? 'translate-x-6' : 'translate-x-0'
-              }`}
+        <h3 className="text-lg font-medium text-gray-800">Pricing Mode</h3>
+        <div className="flex items-center space-x-3">
+          <span className={`text-sm font-medium ${!isBatch ? 'text-blue-600' : 'text-gray-500'}`}>
+            Regular
+          </span>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={isBatch}
+              onChange={(e) => onToggle(e.target.checked)}
+              className="sr-only peer"
             />
+            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
           </label>
+          <span className={`text-sm font-medium ${isBatch ? 'text-blue-600' : 'text-gray-500'}`}>
+            Batch
+          </span>
         </div>
       </div>
 
-      <div className="p-4 rounded-lg bg-gray-50 border border-gray-200">
-        <div className="flex items-center mb-3">
-          {isBatch ? (
-            <svg className="w-5 h-5 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fillRule="evenodd"
-                d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 6a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2zm0 6a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2z"
-                clipRule="evenodd"
-              />
-            </svg>
-          ) : (
-            <svg className="w-5 h-5 text-gray-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fillRule="evenodd"
-                d="M3 5a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V5zm11 1H6v8l4-2 4 2V6z"
-                clipRule="evenodd"
-              />
-            </svg>
-          )}
-          <h4 className="font-medium text-gray-800">
-            {isBatch ? 'Batch Production' : 'Single Item'}
-          </h4>
-        </div>
-
-        <p className="text-sm text-gray-600 mb-3">
-          {isBatch
-            ? 'Optimized for multiple identical items. Pricing is calculated per hour of print time.'
-            : 'Standard pricing for a single item. Best for one-off prints or prototypes.'}
-        </p>
-
-        <div className="grid grid-cols-2 gap-3 text-sm">
-          <div className="p-2 bg-white rounded border border-gray-200">
-            <div className="text-xs text-gray-500 mb-1">Pricing Model</div>
-            <div className="font-medium">
-              {isBatch ? 'Hourly Rate' : 'Tiered Pricing'}
+      {/* Pricing Mode Information */}
+      <div className="bg-gray-50 rounded-lg p-4">
+        {!isBatch ? (
+          <div className="space-y-3">
+            <h4 className="font-medium text-gray-700 flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              Regular Mode - Priority Processing
+            </h4>
+            <p className="text-sm text-gray-600">
+              Fastest turnaround with tiered pricing based on print time. Your order gets priority in the queue.
+            </p>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              {Object.entries(TIERED_PRICING_STRUCTURE).map(([key, tier]) => (
+                <div key={key} className="bg-white p-2 rounded border border-gray-200">
+                  <div className="font-medium text-gray-700">{tier.range}</div>
+                  <div className="text-gray-500">
+                    From ${tier.basePrice} + ${tier.rate}/hr
+                    {'cap' in tier && <span className="block">Cap: ${tier.cap}</span>}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-          <div className="p-2 bg-white rounded border border-gray-200">
-            <div className="text-xs text-gray-500 mb-1">Rate</div>
-            <div className="font-medium">
-              {isBatch
-                ? `$${selectedMaterial.isExotic ? '10' : '7'}/hour`
-                : 'Based on size'}
+        ) : (
+          <div className="space-y-3">
+            <h4 className="font-medium text-gray-700 flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Batch Mode - Economical Pricing
+            </h4>
+            <p className="text-sm text-gray-600">
+              More economical option with simple hourly rates. Your order will be processed when we have capacity.
+            </p>
+            <div className="bg-white p-3 rounded border border-gray-200">
+              <div className="flex justify-between items-center">
+                <span className="font-medium text-gray-700">Hourly Rate for {selectedMaterial.name}:</span>
+                <span className="text-lg font-bold text-green-600">${batchHourlyRate}/hour</span>
+              </div>
+              <div className="text-xs text-gray-500 mt-1">
+                Longer delivery time but significant savings on larger prints
+              </div>
             </div>
           </div>
-          <div className="p-2 bg-white rounded border border-gray-200">
-            <div className="text-xs text-gray-500 mb-1">Minimum Cost</div>
-            <div className="font-medium">$15.00</div>
-          </div>
-          <div className="p-2 bg-white rounded border border-gray-200">
-            <div className="text-xs text-gray-500 mb-1">Best For</div>
-            <div className="font-medium">
-              {isBatch ? '5+ identical items' : '1-4 items'}
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-4">
-          <button
-            onClick={() => onToggle(!isBatch)}
-            className={`w-full py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-              isBatch
-                ? 'bg-blue-600 text-white hover:bg-blue-700'
-                : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-            }`}
-          >
-            {isBatch ? 'Switch to Single Item' : 'Switch to Batch Mode'}
-          </button>
-        </div>
+        )}
       </div>
-
-      {isBatch && (
-        <div className="rounded-lg bg-blue-50 border border-blue-200 p-3 text-sm text-blue-800">
-          <div className="flex items-center">
-            <svg className="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fillRule="evenodd"
-                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z"
-                clipRule="evenodd"
-              />
-            </svg>
-            <span>Batch mode can save up to 40% on large orders.</span>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
