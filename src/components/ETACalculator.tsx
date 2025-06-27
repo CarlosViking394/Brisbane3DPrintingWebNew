@@ -24,7 +24,6 @@ const ETACalculator: React.FC<ETACalculatorProps> = ({
 }) => {
   const [etaCalculation, setEtaCalculation] = useState<ETACalculation | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
-  const [showAddressDetails, setShowAddressDetails] = useState(false);
 
   // Get color scheme based on material category
   const getColors = () => {
@@ -33,28 +32,19 @@ const ETACalculator: React.FC<ETACalculatorProps> = ({
         return {
           primary: 'text-purple-600',
           bg: 'bg-purple-100',
-          border: 'border-purple-200',
-          highlight: 'bg-purple-100 text-purple-700',
-          buttonBg: 'bg-purple-600 hover:bg-purple-700',
-          text: 'text-purple-700'
+          border: 'border-purple-200'
         };
       case 'reinforced':
         return {
           primary: 'text-orange-600',
           bg: 'bg-orange-100',
-          border: 'border-orange-200',
-          highlight: 'bg-orange-100 text-orange-700',
-          buttonBg: 'bg-orange-600 hover:bg-orange-700',
-          text: 'text-orange-700'
+          border: 'border-orange-200'
         };
       default: // standard
         return {
           primary: 'text-blue-600',
           bg: 'bg-blue-100',
-          border: 'border-blue-200',
-          highlight: 'bg-blue-100 text-blue-700',
-          buttonBg: 'bg-blue-600 hover:bg-blue-700',
-          text: 'text-blue-700'
+          border: 'border-blue-200'
         };
     }
   };
@@ -97,161 +87,67 @@ const ETACalculator: React.FC<ETACalculatorProps> = ({
     } else {
       setEtaCalculation(null);
     }
-  }, [costBreakdown?.printTimeHours, addressData, calculateETAEstimate]);
+  }, [costBreakdown?.printTimeHours, calculateETAEstimate]);
 
-  const urgency = etaCalculation ? getDeliveryUrgency(etaCalculation.totalDays) : null;
+  if (isCalculating) {
+    return (
+      <div className={`bg-white rounded-xl p-6 shadow-sm border ${className}`}>
+        <div className="text-center py-6">
+          <div className="w-10 h-10 border-4 border-blue-400 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-gray-600">Calculating delivery estimate...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!etaCalculation) {
+    return (
+      <div className={`bg-white rounded-xl p-6 shadow-sm border ${className}`}>
+        <div className="text-center py-6">
+          <p className="text-gray-500">Upload a 3D model to see delivery estimates</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className={`bg-white rounded-xl p-6 shadow-lg border ${colors.border} ${className}`}>
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-xl font-bold text-gray-800 flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 mr-2 ${colors.primary}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-          Delivery Estimate
-        </h3>
-        {etaCalculation && urgency && (
-          <span className={`px-3 py-1 rounded-full text-sm font-medium ${urgency.color} bg-current/10`}>
-            {urgency.description}
-          </span>
-        )}
+    <div className={`bg-white rounded-xl p-6 shadow-sm border ${colors.border} ${className}`}>
+      <h3 className="text-xl font-bold text-gray-800 mb-4">Delivery Estimate</h3>
+      
+      <div className="bg-blue-50 p-4 rounded-lg mb-4">
+        <div className="text-center">
+          <div className="text-lg font-medium mb-1">Estimated Delivery</div>
+          <div className="text-2xl font-bold text-blue-700">
+            {formatDeliveryDate(etaCalculation.estimatedDate)}
+          </div>
+          <div className="text-sm text-blue-600 mt-1">
+            {formatDuration(etaCalculation.totalDays)} total time
+          </div>
+        </div>
       </div>
-
-      {isCalculating ? (
-        <div className="text-center py-10">
-          <div className="inline-flex items-center justify-center">
-            <div className="w-10 h-10 border-4 border-blue-400 border-t-blue-600 rounded-full animate-spin"></div>
-          </div>
-          <p className="text-gray-600 mt-4">Calculating delivery estimate...</p>
+      
+      <div className="space-y-3">
+        <div className="flex justify-between">
+          <span>Printing Time:</span>
+          <span className="font-medium">{formatDuration(etaCalculation.printTimeDays)}</span>
         </div>
-      ) : etaCalculation ? (
-        <div className="space-y-6">
-          {/* Main Delivery Date */}
-          <div className="text-center bg-gradient-to-r from-blue-50 to-sky-50 rounded-xl p-6 border border-blue-100 shadow-sm">
-            <div className="text-sm font-medium text-gray-600 mb-2">Estimated Delivery</div>
-            <div className="text-3xl font-bold text-gray-800 mb-1">
-              {formatDeliveryDate(etaCalculation.estimatedDate)}
-            </div>
-            <div className="text-sm text-gray-600">
-              {etaCalculation.estimatedDate.toLocaleDateString('en-AU', { 
-                timeZone: 'Australia/Brisbane',
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}
-            </div>
-            <div className="inline-block px-4 py-1 mt-3 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
-              {formatDuration(etaCalculation.totalDays)} total time
-            </div>
-          </div>
-
-          {/* Address Status */}
-          {etaCalculation.addressBased ? (
-            <div className="flex items-center justify-between p-4 bg-green-50 rounded-xl border border-green-200 transition-all duration-200 hover:shadow-md">
-              <div className="flex items-center">
-                <div className="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-green-100 rounded-full">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                  </svg>
-                </div>
-                <span className="ml-3 font-medium text-green-800">Address-based estimate</span>
-              </div>
-              {addressData && (
-                <button
-                  onClick={() => setShowAddressDetails(!showAddressDetails)}
-                  className="text-sm text-green-600 hover:text-green-800 hover:underline flex items-center font-medium"
-                  aria-expanded={showAddressDetails}
-                  aria-label="Toggle address details"
-                >
-                  {showAddressDetails ? 
-                    <span className="flex items-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                      Hide details
-                    </span> : 
-                    <span className="flex items-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                      View details
-                    </span>
-                  }
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="flex items-center justify-between p-4 bg-yellow-50 rounded-xl border border-yellow-200 transition-all duration-200 hover:shadow-md">
-              <div className="flex items-center">
-                <div className="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-yellow-100 rounded-full">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
-                </div>
-                <span className="ml-3 font-medium text-yellow-800">
-                  Using standard delivery estimate
-                </span>
-              </div>
-              <div className="text-sm text-yellow-600">
-                Please enter your address for a more accurate estimate
-              </div>
-            </div>
-          )}
-
-          {/* Address Details */}
-          {showAddressDetails && etaCalculation.addressBased && addressData && (
-            <div className="p-4 bg-white rounded-xl border border-gray-200 shadow-sm transition-all duration-200">
-              <h4 className="font-medium text-gray-800 mb-3 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                Delivery Address
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <span className="text-sm text-gray-600">Location type:</span>
-                  <span className="block font-medium text-gray-800">{etaCalculation.locationInfo}</span>
-                </div>
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <span className="text-sm text-gray-600">Shipping time:</span>
-                  <span className="block font-medium text-gray-800">{formatDuration(etaCalculation.shippingDays)}</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ETA Breakdown */}
-          <div className="space-y-4">
-            <h4 className="font-bold text-gray-800 mb-2 flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-2 ${colors.primary}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Delivery Timeline
-            </h4>
-            
-            <div className="space-y-3">
-              {/* Print Time */}
-              <div className="flex items-center p-4 bg-gray-50 rounded-xl border border-gray-200 transition-all duration-200 hover:shadow-md">
-                <div className={`h-10 w-10 rounded-full ${colors.bg} flex items-center justify-center flex-shrink-0`}>
-                  <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${colors.primary}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                  </svg>
-                </div>
-                <div className="ml-4 flex-1">
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium text-gray-800">3D Printing</span>
-                    <span className={`text-sm ${colors.highlight} px-3 py-1 rounded-full`}>
-                      {formatDuration(etaCalculation.printTimeDays)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+        <div className="flex justify-between">
+          <span>Preparation:</span>
+          <span className="font-medium">{formatDuration(etaCalculation.prepDays)}</span>
         </div>
-      )}
+        <div className="flex justify-between">
+          <span>Queue Time:</span>
+          <span className="font-medium">{formatDuration(etaCalculation.queueDelayDays)}</span>
+        </div>
+        <div className="flex justify-between">
+          <span>Shipping:</span>
+          <span className="font-medium">{formatDuration(etaCalculation.shippingDays)}</span>
+        </div>
+        <div className="border-t border-gray-200 pt-2 mt-2 flex justify-between">
+          <span className="font-bold">Total:</span>
+          <span className="font-bold">{formatDuration(etaCalculation.totalDays)}</span>
+        </div>
+      </div>
     </div>
   );
 };
