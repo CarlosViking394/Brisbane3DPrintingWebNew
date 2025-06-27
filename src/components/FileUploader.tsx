@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { ModelFile } from '../types';
-import { parse3DFile, formatModelStats } from '../utils/3dFileParser';
+import { parse3DFile } from '../utils/3dFileParser';
+import useAppStore from '../store';
 
 interface FileUploaderProps {
   onFileUpload: (file: ModelFile) => void;
@@ -12,6 +13,9 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onFileUpload, isLoading = f
   const [dragOver, setDragOver] = useState(false);
   const [parsing, setParsing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Access the store
+  const { setModelFile, updateCostBreakdown } = useAppStore();
 
   const handleFileSelect = async (file: File) => {
     setError(null);
@@ -40,7 +44,13 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onFileUpload, isLoading = f
       };
       
       console.log('Calling onFileUpload with:', modelFile);
+      // Pass to parent component for backward compatibility
       onFileUpload(modelFile);
+      
+      // Update the store
+      setModelFile(modelFile);
+      // Wait for state update then recalculate
+      setTimeout(() => updateCostBreakdown(), 0);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to parse file';
       setError(errorMessage);

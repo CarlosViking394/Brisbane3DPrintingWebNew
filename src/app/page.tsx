@@ -1,54 +1,35 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import FileUploader from '../components/FileUploader';
 import ModelViewer from '../components/ModelViewer';
 import MaterialSelector from '../components/MaterialSelector';
 import CostEstimator from '../components/CostEstimator';
 import Header from '../components/Header';
 import UserInformation from '../components/UserInformation';
-import { CostBreakdown, ModelFile, MaterialType } from '../types';
-
-// Default material
-const DEFAULT_MATERIAL: MaterialType = {
-  name: 'PLA',
-  pricePerKg: 25,
-  category: 'standard',
-};
+import useAppStore from '../store';
 
 export default function Home() {
-  // State management
-  const [modelFile, setModelFile] = useState<ModelFile | undefined>(undefined);
-  const [selectedMaterial, setSelectedMaterial] = useState<MaterialType>(DEFAULT_MATERIAL);
-  const [isBatch, setIsBatch] = useState<boolean>(false);
-  const [costBreakdown, setCostBreakdown] = useState<CostBreakdown | null>(null);
-  const [addressData, setAddressData] = useState<any | undefined>(undefined);
+  const {
+    modelFile,
+    setModelFile,
+    selectedMaterial,
+    setSelectedMaterial,
+    isBatch,
+    setIsBatch,
+    costBreakdown,
+    updateCostBreakdown,
+    addressData,
+    setAddressData
+  } = useAppStore();
 
   // Handle file upload
-  const handleFileUpload = (file: ModelFile) => {
+  const handleFileUpload = (file: any) => {
     console.log('Page received uploaded file:', file);
     console.log('Parsed model geometry:', file.parsedModel?.geometry);
     setModelFile(file);
-  };
-
-  // Handle material change
-  const handleMaterialChange = (material: MaterialType) => {
-    setSelectedMaterial(material);
-  };
-
-  // Handle batch mode toggle
-  const handleBatchToggle = (batchMode: boolean) => {
-    setIsBatch(batchMode);
-  };
-
-  // Handle cost breakdown change
-  const handleCostBreakdownChange = (breakdown: CostBreakdown | null) => {
-    setCostBreakdown(breakdown);
-  };
-  
-  // Handle address change
-  const handleAddressChange = (address: any) => {
-    setAddressData(address);
+    // Trigger cost breakdown update
+    setTimeout(() => updateCostBreakdown(), 0);
   };
 
   return (
@@ -78,7 +59,7 @@ export default function Home() {
               <h2 className="text-xl font-bold text-gray-900">Material Selection</h2>
               <MaterialSelector 
                 selectedMaterial={selectedMaterial} 
-                onMaterialChange={handleMaterialChange} 
+                onMaterialChange={setSelectedMaterial} 
                 modelVolume={modelFile?.parsedModel?.stats?.volume}
               />
             </section>
@@ -90,7 +71,7 @@ export default function Home() {
             <section className="bg-white rounded-xl shadow-sm p-6 space-y-4">
               <h2 className="text-xl font-bold text-gray-900">Your Information</h2>
               <UserInformation 
-                onAddressChange={handleAddressChange} 
+                onAddressChange={setAddressData} 
               />
             </section>
 
@@ -99,11 +80,11 @@ export default function Home() {
               <h2 className="text-xl font-bold text-gray-900">Cost Calculator</h2>
               <CostEstimator 
                 selectedMaterial={selectedMaterial} 
-                onMaterialChange={handleMaterialChange} 
+                onMaterialChange={setSelectedMaterial} 
                 isBatch={isBatch} 
-                onBatchToggle={handleBatchToggle} 
+                onBatchToggle={setIsBatch} 
                 modelFile={modelFile} 
-                onCostBreakdownChange={handleCostBreakdownChange} 
+                onCostBreakdownChange={() => {/* No-op, handled by store */}} 
               />
             </section>
           </div>

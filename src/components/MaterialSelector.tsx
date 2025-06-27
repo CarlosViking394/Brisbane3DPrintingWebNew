@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { MaterialType } from '../types';
 import { getWeightForMaterial, formatWeight } from '../utils/3dFileParser';
+import useAppStore from '../store';
 
 // Enhanced material data with descriptions and properties
 export interface EnhancedMaterial extends MaterialType {
@@ -103,6 +104,9 @@ const MaterialSelector: React.FC<MaterialSelectorProps> = ({
 }) => {
   const [showComparison, setShowComparison] = useState(false);
   const [expandedMaterialId, setExpandedMaterialId] = useState<string | null>(null);
+  
+  // Get store access for direct updates if needed
+  const { setSelectedMaterial } = useAppStore();
 
   const handleMaterialSelect = (enhancedMaterial: EnhancedMaterial) => {
     const materialType: MaterialType = {
@@ -110,7 +114,12 @@ const MaterialSelector: React.FC<MaterialSelectorProps> = ({
       pricePerKg: enhancedMaterial.pricePerKg,
       category: enhancedMaterial.category
     };
+    
+    // Update via props for backwards compatibility
     onMaterialChange(materialType);
+    
+    // Also update store directly if needed
+    setSelectedMaterial(materialType);
   };
 
   const toggleMaterialDetails = (materialId: string, event: React.MouseEvent) => {

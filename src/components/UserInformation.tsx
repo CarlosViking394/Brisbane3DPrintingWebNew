@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import useAppStore from '../store';
 
-// Define interface locally instead of importing from etaCalculator
+// Define interface locally
 interface AddressData {
   street?: string;
   city: string;
@@ -18,22 +19,36 @@ const UserInformation: React.FC<UserInformationProps> = ({
   onAddressChange, 
   className = '' 
 }) => {
-  const [addressData, setAddressData] = useState<AddressData>({
-    street: '',
-    city: '',
-    state: '',
-    postalCode: '',
-    country: 'Australia'
-  });
+  const { setAddressData: setStoreAddressData, addressData: storeAddressData } = useAppStore();
+  
+  const [addressData, setAddressData] = useState<AddressData>(
+    storeAddressData || {
+      street: '',
+      city: '',
+      state: '',
+      postalCode: '',
+      country: 'Australia'
+    }
+  );
+
+  // Effect to sync with store when store address data changes
+  useEffect(() => {
+    if (storeAddressData) {
+      setAddressData(storeAddressData);
+    }
+  }, [storeAddressData]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     const newAddress = { ...addressData, [name]: value };
     setAddressData(newAddress);
     
-    // Only update parent if we have enough data for shipping calculation
+    // Only update parent and store if we have enough data for shipping calculation
     if (newAddress.city && newAddress.state && newAddress.postalCode) {
+      // Update via props (for backward compatibility)
       onAddressChange(newAddress);
+      // Update store
+      setStoreAddressData(newAddress);
     }
   };
 

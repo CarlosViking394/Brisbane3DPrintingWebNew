@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { CostBreakdown, MaterialType, ModelFile } from '../types';
-import { calculateCost, formatCost, formatPrintTime, PRINT_SETTINGS } from '../utils/costCalculator';
+import { formatCost, formatPrintTime, PRINT_SETTINGS } from '../utils/costCalculator';
+import useAppStore from '../store';
 
 interface CostEstimatorProps {
   selectedMaterial: MaterialType;
@@ -16,52 +17,16 @@ const CostEstimator: React.FC<CostEstimatorProps> = ({
   selectedMaterial,
   isBatch,
   modelFile,
-  onCostBreakdownChange,
   className = ''
 }) => {
-  // Form state - using default values internally
-  const infillPercentage = PRINT_SETTINGS.DEFAULT_INFILL;
-  const layerHeight = PRINT_SETTINGS.DEFAULT_LAYER_HEIGHT;
-  const printSpeed = PRINT_SETTINGS.DEFAULT_PRINT_SPEED;
-  // Support material is always included
-  const hasSupport = true;
-  
-  // Calculated cost breakdown
-  const [costBreakdown, setCostBreakdown] = useState<CostBreakdown | null>(null);
-
-  // Calculate cost when parameters change
-  useEffect(() => {
-    if (!modelFile || !modelFile.parsedModel?.stats?.volume) {
-      setCostBreakdown(null);
-      return;
-    }
-
-    const volume = modelFile.parsedModel.stats.volume;
-    const breakdown = calculateCost({
-      volume,
-      material: selectedMaterial,
-      isBatch,
-      hasSupport,
-      infillPercentage,
-      layerHeight,
-      printSpeed
-    });
-
-    setCostBreakdown(breakdown);
-  }, [
-    modelFile, 
-    selectedMaterial, 
-    isBatch, 
-    infillPercentage, 
-    layerHeight, 
+  // Get data and actions from store
+  const {
+    costBreakdown,
+    infillPercentage,
+    layerHeight,
     printSpeed,
     hasSupport
-  ]);
-  
-  // Separate effect to call onCostBreakdownChange when costBreakdown changes
-  useEffect(() => {
-    onCostBreakdownChange(costBreakdown);
-  }, [costBreakdown, onCostBreakdownChange]);
+  } = useAppStore();
 
   // Format layer height for display
   const formatLayerHeight = (value: number): string => {
