@@ -87,8 +87,8 @@ export async function POST(req: Request) {
       console.error('Failed to send webhook notification email:', error);
       // Log more details about the error
       console.error('Error details:', {
-        message: error.message,
-        stack: error.stack,
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
         staffEmail: staffEmail
       });
     }
