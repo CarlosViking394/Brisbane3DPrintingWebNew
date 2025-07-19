@@ -27,8 +27,8 @@ export async function POST(req: Request) {
     });
     
     // Send notification email to staff
+    const staffEmail = process.env.STAFF_EMAIL || 'carlosarangovelasquez@gmail.com';
     try {
-      const staffEmail = process.env.STAFF_EMAIL || 'carlosarangovelasquez@gmail.com';
       const result = await resend.emails.send({
         from: 'Brisbane 3D Printing <onboarding@resend.dev>',
         to: staffEmail,
