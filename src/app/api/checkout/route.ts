@@ -200,6 +200,24 @@ export async function POST(req: NextRequest) {
     
     console.log('Creating checkout session with:', { amount, productName, modelDetails, customerInfo });
     
+    // Debug environment variables
+    const baseUrl = process.env.NEXT_PUBLIC_URL;
+    console.log('Environment check:', {
+      NEXT_PUBLIC_URL: baseUrl,
+      hasBaseUrl: !!baseUrl,
+      NODE_ENV: process.env.NODE_ENV
+    });
+    
+    // Construct URLs with fallback
+    const successUrl = baseUrl 
+      ? `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`
+      : `https://brisbane-3d-printing-web-new.vercel.app/success?session_id={CHECKOUT_SESSION_ID}`;
+    const cancelUrl = baseUrl 
+      ? `${baseUrl}/cancel`
+      : `https://brisbane-3d-printing-web-new.vercel.app/cancel`;
+    
+    console.log('Redirect URLs:', { successUrl, cancelUrl });
+    
     // Create a checkout session with the latest API format
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -217,8 +235,8 @@ export async function POST(req: NextRequest) {
         },
       ],
       mode: 'payment',
-      success_url: `${process.env.NEXT_PUBLIC_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_URL}/cancel`,
+      success_url: successUrl,
+      cancel_url: cancelUrl,
       customer_email: customerInfo.email,
       shipping_address_collection: {
         allowed_countries: ['AU'], // Allow only Australian addresses
