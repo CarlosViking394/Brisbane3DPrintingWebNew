@@ -35,7 +35,10 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <Header />
+      <Header 
+        totalCost={costBreakdown?.totalCost} 
+        modelAvailable={!!modelFile} 
+      />
       
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 pt-36 pb-8 md:px-8 lg:px-12">

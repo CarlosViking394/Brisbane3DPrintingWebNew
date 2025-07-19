@@ -51,6 +51,89 @@ const CostEstimator: React.FC<CostEstimatorProps> = ({
     return 'Ultra Fast';
   };
 
+  const handlePrintNowClick = async () => {
+    // Get data from store
+    const { modelFile, selectedMaterial, costBreakdown, addressData } = useAppStore.getState();
+    
+    // Basic validation
+    if (!modelFile || !costBreakdown || !addressData || !addressData.email || !addressData.name) {
+      alert('Please complete your information and upload a model.');
+      return;
+    }
+
+    try {
+      // Read the file content
+      let fileData = null;
+      if (modelFile.file) {
+        const reader = new FileReader();
+        const fileContent = await new Promise<string>((resolve, reject) => {
+          reader.onload = (e) => resolve(e.target?.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(modelFile.file);
+        });
+        
+        // Extract base64 content (remove data:type;base64, prefix)
+        const base64Content = fileContent.split(',')[1];
+        
+        fileData = {
+          filename: modelFile.filename,
+          content: base64Content,
+        };
+      }
+
+      // Prepare payload for API
+      const payload = {
+        amount: costBreakdown.totalCost,
+        productName: '3D Print Order',
+        modelDetails: {
+          name: modelFile.filename,
+          material: selectedMaterial.name,
+          volume: modelFile.volume,
+          weight: costBreakdown.weightGrams,
+          dimensions: modelFile.dimensions,
+          printTime: costBreakdown.printTimeHours
+        },
+        customerInfo: {
+          name: addressData.name,
+          email: addressData.email,
+          address: {
+            line1: addressData.street || '',
+            city: addressData.city,
+            state: addressData.state,
+            postal_code: addressData.postalCode,
+            country: addressData.country
+          }
+        },
+        fileData: fileData // Include the file data
+      };
+
+      console.log('Sending checkout request with payload (including file):', {
+        ...payload,
+        fileData: fileData ? { filename: fileData.filename, hasContent: true } : null
+      });
+      
+      // Call the API
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      
+      const data = await response.json();
+      console.log('Checkout response:', data);
+      
+      if (data.success && data.url) {
+        // Redirect to Stripe checkout
+        window.location.href = data.url;
+      } else {
+        alert('Payment initiation failed. Please try again.');
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+      alert('An error occurred. Please try again.');
+    }
+  };
+
   return (
     <div className={`space-y-6 ${className}`}>
       {/* No model uploaded message */}
@@ -158,6 +241,18 @@ const CostEstimator: React.FC<CostEstimatorProps> = ({
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Print Now Button */}
+      {modelFile && costBreakdown && (
+        <div id="print-calculator" className="mt-6">
+          <button
+            onClick={handlePrintNowClick}
+            className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          >
+            Print Now - {formatCost(costBreakdown.totalCost)}
+          </button>
         </div>
       )}
     </div>

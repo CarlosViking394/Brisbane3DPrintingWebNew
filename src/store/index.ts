@@ -3,7 +3,9 @@ import { calculateCost } from '../utils/costCalculator';
 import { MaterialType, ModelFile, CostBreakdown } from '../types';
 
 // Address data interface
-interface AddressData {
+export interface AddressData {
+  name: string;
+  email: string;
   street?: string;
   city: string;
   state: string;

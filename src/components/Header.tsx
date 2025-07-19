@@ -56,25 +56,33 @@ const Header: React.FC<HeaderProps> = ({ totalCost, modelAvailable = false }) =>
           {/* Navigation - Not linked as per request */}
           <nav className="hidden md:block">
             <ul className="flex space-x-8">
-              <li className="text-gray-800 hover:text-orange-500 cursor-pointer font-medium">Print my model</li>
-              <li className="text-gray-800 hover:text-orange-500 cursor-pointer font-medium">Prices</li>
-              <li className="text-gray-800 hover:text-orange-500 cursor-pointer font-medium">Services</li>
-              <li className="text-gray-800 hover:text-orange-500 cursor-pointer font-medium">Materials</li>
-              <li className="text-gray-800 hover:text-orange-500 cursor-pointer font-medium">Free models</li>
+              <li>
+                <a href="https://brisbane3dprinting.com.au/print-my-model/" className="text-gray-800 hover:text-blue-600 cursor-pointer font-medium">Print my model</a>
+              </li>
+              <li>
+                <a href="https://brisbane3dprinting.com.au/prices/" className="text-gray-800 hover:text-blue-600 cursor-pointer font-medium">Prices</a>
+              </li>
+              <li>
+                <a href="https://brisbane3dprinting.com.au/services/" className="text-gray-800 hover:text-blue-600 cursor-pointer font-medium">Services</a>
+              </li>
+              <li>
+                <a href="https://brisbane3dprinting.com.au/materials/" className="text-gray-800 hover:text-blue-600 cursor-pointer font-medium">Materials</a>
+              </li>
+              <li>
+                <a href="https://brisbane3dprinting.com.au/free-models/" className="text-gray-800 hover:text-blue-600 cursor-pointer font-medium">Free models</a>
+              </li>
             </ul>
           </nav>
           
-          {/* Mobile menu button - Just for visual */}
-          <div className="md:hidden">
-            <button className="text-gray-800 hover:text-orange-500">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-          </div>
-          
-          {/* Print Now button - routes to Stripe */}
-          <div className="hidden md:block">
+          <div className="flex items-center space-x-4">
+            <div className="md:hidden">
+              <button className="text-gray-800 hover:text-orange-500">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+            </div>
+            
             <button 
               onClick={handlePrintNowClick}
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium flex items-center"
