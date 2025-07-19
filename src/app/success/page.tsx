@@ -2,9 +2,10 @@
 
 import { useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
+import { Suspense } from 'react';
 import Link from 'next/link';
 
-export default function Success() {
+function SessionLogger() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('session_id');
 
@@ -14,6 +15,10 @@ export default function Success() {
     }
   }, [sessionId]);
 
+  return null;
+}
+
+export default function Success() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="bg-white p-8 rounded-lg shadow-lg text-center">
@@ -21,6 +26,9 @@ export default function Success() {
         <p className="text-gray-600 mb-6">Thank you for your order. We&apos;ll start printing your model soon.</p>
         <Link href="/" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Return to Home</Link>
       </div>
+      <Suspense fallback={null}>
+        <SessionLogger />
+      </Suspense>
     </div>
   );
 } 
