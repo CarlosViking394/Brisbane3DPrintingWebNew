@@ -24,6 +24,20 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Bambu Labs Integration
+
+The application can generate previews with automatic supports by forwarding
+uploaded models to the Bambu Labs slicing service. Configure the following
+environment variables to enable this feature:
+
+```
+BAMBU_API_URL=<service base url>
+BAMBU_API_KEY=<api key>
+```
+
+If the service is not configured or unreachable the app will fall back to
+local parsing without supports.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
