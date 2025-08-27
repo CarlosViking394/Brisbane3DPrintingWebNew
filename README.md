@@ -24,6 +24,17 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Run with Docker
+
+The project includes a `Dockerfile` for containerized builds. To build and run the image locally:
+
+```bash
+docker build -t brisbane3dprinting-web .
+docker run -p 3000:3000 brisbane3dprinting-web
+```
+
+The application will be available at [http://localhost:3000](http://localhost:3000).
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
