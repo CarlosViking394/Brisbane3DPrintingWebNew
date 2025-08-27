@@ -26,9 +26,28 @@
 }
 
 body {
-  background: var(--background);
+  /* Soft gradient background inspired by liquid glass aesthetics */
+  background: linear-gradient(135deg, #e0f7fa 0%, #ede9fe 50%, #ffe4e6 100%);
   color: rgb(var(--foreground-rgb));
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Glassmorphism utility classes */
+.glass-card {
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 1rem;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.glass-header {
+  background: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 /* Animation for expanding/collapsing content */

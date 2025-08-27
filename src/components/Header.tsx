@@ -37,7 +37,7 @@ const Header: React.FC<HeaderProps> = ({ totalCost, modelAvailable = false }) =>
   };
   
   return (
-    <header className="fixed top-0 left-0 right-0 bg-white py-8 shadow-md z-50">
+    <header className="glass-header fixed top-0 left-0 right-0 py-8 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
@@ -83,9 +83,9 @@ const Header: React.FC<HeaderProps> = ({ totalCost, modelAvailable = false }) =>
               </button>
             </div>
             
-            <button 
+            <button
               onClick={handlePrintNowClick}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium flex items-center"
+              className="bg-gradient-to-r from-blue-500/80 to-purple-500/80 hover:from-blue-600/80 hover:to-purple-600/80 text-white px-4 py-2 rounded-md font-medium flex items-center border border-white/20 shadow-md backdrop-blur-sm"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />

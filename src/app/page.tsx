@@ -32,8 +32,8 @@ export default function Home() {
     setTimeout(() => updateCostBreakdown(), 0);
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50">
+    return (
+    <div className="min-h-screen">
       {/* Header */}
       <Header 
         totalCost={costBreakdown?.totalCost} 
@@ -46,19 +46,19 @@ export default function Home() {
           {/* Left Column - Preview, Upload, and Material Selection */}
           <div className="lg:col-span-5 space-y-8">
             {/* Model Preview Section */}
-            <section className="bg-white rounded-xl shadow-sm p-6 space-y-4">
+            <section className="glass-card p-6 space-y-4">
               <h2 className="text-xl font-bold text-gray-900">Model Preview</h2>
               <ModelViewer modelFile={modelFile} className="h-96" />
             </section>
             
             {/* File Upload Section */}
-            <section className="bg-white rounded-xl shadow-sm p-6 space-y-4">
+            <section className="glass-card p-6 space-y-4">
               <h2 className="text-xl font-bold text-gray-900">Upload 3D Model</h2>
               <FileUploader onFileUpload={handleFileUpload} />
             </section>
             
             {/* Material Selection */}
-            <section className="bg-white rounded-xl shadow-sm p-6 space-y-4">
+            <section className="glass-card p-6 space-y-4">
               <h2 className="text-xl font-bold text-gray-900">Material Selection</h2>
               <MaterialSelector 
                 selectedMaterial={selectedMaterial} 
@@ -71,7 +71,7 @@ export default function Home() {
           {/* Right Column - Options and Calculations */}
           <div className="lg:col-span-7 space-y-8">
             {/* User Information for delivery */}
-            <section className="bg-white rounded-xl shadow-sm p-6 space-y-4">
+            <section className="glass-card p-6 space-y-4">
               <h2 className="text-xl font-bold text-gray-900">Your Information</h2>
               <UserInformation 
                 onAddressChange={setAddressData} 
@@ -79,7 +79,7 @@ export default function Home() {
             </section>
 
             {/* Cost Estimator */}
-            <section className="bg-white rounded-xl shadow-sm p-6 space-y-4">
+            <section className="glass-card p-6 space-y-4">
               <h2 className="text-xl font-bold text-gray-900">Cost Calculator</h2>
               <CostEstimator 
                 selectedMaterial={selectedMaterial} 
