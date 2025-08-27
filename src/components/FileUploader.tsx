@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { ModelFile } from '../types';
 import { parse3DFile } from '../utils/3dFileParser';
+import { sliceWithBambu } from '../utils/bambuService';
 import useAppStore from '../store';
 
 interface FileUploaderProps {
@@ -24,9 +25,16 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onFileUpload, isLoading = f
     console.log('File selected:', file.name, 'Size:', file.size, 'Type:', file.type);
     
     try {
-      // Parse 3D file (auto-detects STL or 3MF format)
-      console.log('Attempting to parse 3D file...');
-      const parsedModel = await parse3DFile(file);
+      // Parse 3D file through Bambu slicing service to include supports.
+      console.log('Attempting to parse 3D file via Bambu service...');
+      let parsedModel;
+      try {
+        parsedModel = await sliceWithBambu(file);
+        console.log('Bambu service returned model with supports');
+      } catch (bambuError) {
+        console.warn('Bambu service failed, falling back to local parsing', bambuError);
+        parsedModel = await parse3DFile(file);
+      }
       console.log('File parsed successfully:', parsedModel);
       console.log('Geometry received:', parsedModel.geometry);
       
